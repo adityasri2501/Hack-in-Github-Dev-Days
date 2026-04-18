@@ -9,38 +9,12 @@
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Tailwind & Custom CSS Variables -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: 'var(--primary)',
-                        'primary-dark': 'var(--primary-dark)',
-                        secondary: 'var(--secondary)',
-                        'secondary-dark': 'var(--secondary-dark)',
-                        success: 'var(--success)',
-                        warning: 'var(--warning)',
-                        danger: 'var(--danger)',
-                        surface: 'var(--surface)',
-                        'surface-hover': 'var(--surface-hover)',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                        'float': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="antialiased selection:bg-primary/20 selection:text-primary-dark">

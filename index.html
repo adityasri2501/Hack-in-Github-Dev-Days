@@ -1,37 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediRoute</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MediRoute - Emergency Healthcare</title>
 
-    <!-- Tailwind -->
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
-
-    <!-- Your CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Tailwind & Custom CSS Variables -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--primary)',
+                        'primary-dark': 'var(--primary-dark)',
+                        secondary: 'var(--secondary)',
+                        'secondary-dark': 'var(--secondary-dark)',
+                        success: 'var(--success)',
+                        warning: 'var(--warning)',
+                        danger: 'var(--danger)',
+                        surface: 'var(--surface)',
+                        'surface-hover': 'var(--surface-hover)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'float': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="antialiased selection:bg-primary/20 selection:text-primary-dark">
 
-<header class="header">
-    <h1>MediRoute</h1>
-    <button onclick="triggerSOS()">SOS</button>
-</header>
+    <!-- Toast Notification Container -->
+    <div id="toast-container"
+        class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[10001] flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4">
+    </div>
 
-<main id="app"></main>
+    <!-- Persistent Header (Glassmorphism) -->
+    <header class="fixed top-0 w-full glass z-40 px-5 py-3.5 flex justify-between items-center transition-all">
+        <a href="#/" class="flex items-center gap-2 text-primary font-extrabold text-xl tracking-tight">
+            <div class="bg-primary/10 p-1.5 rounded-lg"><i data-lucide="cross" class="w-5 h-5 fill-primary"></i></div>
+            MediRoute
+        </a>
+        <div class="relative">
+            <button id="lang-btn"
+                class="flex items-center gap-1.5 text-sm bg-white border border-neutral-200 shadow-sm px-3.5 py-1.5 rounded-full hover:bg-neutral-50 transition-colors font-medium"
+                onclick="toggleLangMenu()">
+                <i data-lucide="globe" class="w-4 h-4 text-neutral-500"></i> <span id="current-lang-display">EN</span>
+            </button>
+            <div id="lang-menu"
+                class="hidden absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-float border border-neutral-100 overflow-hidden py-1 transition-all">
+                <button
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                    onclick="setLang('en')">🇺🇸 English</button>
+                <button
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                    onclick="setLang('fr')">🇫🇷 Français</button>
+                <button
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                    onclick="setLang('es')">🇪🇸 Español</button>
+                <button
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                    onclick="setLang('ar')">🇦🇪 العربية</button>
+                <button
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                    onclick="setLang('hi')">🇮🇳 हिन्दी</button>
+            </div>
+        </div>
+    </header>
 
-<!-- External JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Main Content Area -->
+    <div id="app-root" class="pt-20"></div>
 
-<!-- Your JS -->
-<script src="script.js"></script>
+    <!-- Persistent Global UI -->
+    <button onclick="triggerSOS()"
+        class="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-float z-[9999] sos-pulse group transition-transform hover:scale-105">
+        <span class="font-black tracking-wider text-sm" data-i18n="sos_btn_short">SOS</span>
+    </button>
 
+    <div
+        class="fixed bottom-[68px] w-full bg-primary-dark/95 backdrop-blur-sm text-white text-[11px] py-1.5 text-center z-40 px-2 leading-tight font-medium tracking-wide">
+        <span data-i18n="emergency_footer">📞 Call 112 (IN) · 911 (US) · 999 (UK) · Navigation Guidance Only</span>
+    </div>
+
+    <!-- Bottom Navigation (Glassmorphism) -->
+    <nav
+        class="fixed bottom-0 w-full glass-nav flex justify-around pb-safe pt-2.5 pb-2.5 z-40 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
+        <a href="#/"
+            class="flex flex-col items-center text-neutral-400 hover:text-primary nav-item transition-colors w-16"
+            data-path="/">
+            <i data-lucide="home" class="w-5 h-5 mb-1 transition-transform group-hover:scale-110"></i> <span
+                class="text-[10px] font-semibold tracking-wide" data-i18n="nav_home">Home</span>
+        </a>
+        <a href="#/doctors"
+            class="flex flex-col items-center text-neutral-400 hover:text-primary nav-item transition-colors w-16"
+            data-path="/doctors">
+            <i data-lucide="stethoscope" class="w-5 h-5 mb-1 transition-transform group-hover:scale-110"></i> <span
+                class="text-[10px] font-semibold tracking-wide" data-i18n="nav_doctors">Doctors</span>
+        </a>
+        <a href="#/chat"
+            class="flex flex-col items-center text-neutral-400 hover:text-primary nav-item transition-colors w-16"
+            data-path="/chat">
+            <i data-lucide="message-square" class="w-5 h-5 mb-1 transition-transform group-hover:scale-110"></i> <span
+                class="text-[10px] font-semibold tracking-wide" data-i18n="nav_chat">AI Chat</span>
+        </a>
+        <a href="#/pharmacy"
+            class="flex flex-col items-center text-neutral-400 hover:text-primary nav-item transition-colors w-16"
+            data-path="/pharmacy">
+            <i data-lucide="map" class="w-5 h-5 mb-1 transition-transform group-hover:scale-110"></i> <span
+                class="text-[10px] font-semibold tracking-wide" data-i18n="nav_pharmacy">Map</span>
+        </a>
+        <a href="#/profile"
+            class="flex flex-col items-center text-neutral-400 hover:text-primary nav-item transition-colors w-16"
+            data-path="/profile">
+            <i data-lucide="user" class="w-5 h-5 mb-1 transition-transform group-hover:scale-110"></i> <span
+                class="text-[10px] font-semibold tracking-wide" data-i18n="nav_profile">Profile</span>
+        </a>
+    </nav>
+
+    <!-- Modal Container -->
+    <div id="modal-container"
+        class="hidden fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 transition-opacity">
+    </div>
+
+    <script src="script.js"></script>
 </body>
+
 </html>
